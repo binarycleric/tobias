@@ -26,6 +26,10 @@ module Tobias
         "128MB",
         "256MB",
         "512MB",
+        "1GB",
+        "2GB",
+        "4GB",
+        "8GB",
       ]
 
       code = File.read("scripts/#{script}.rb")
