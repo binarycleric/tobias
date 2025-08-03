@@ -10,7 +10,7 @@ module Tobias
 
     desc "profile SCRIPT", "profile"
     option :database_url, type: :string, required: true
-    option :iterations, type: :numeric, default: 10
+    option :iterations, type: :numeric, default: 100
     option :debug, type: :boolean, default: false
     def profile(script)
       database = Sequel.connect(options[:database_url])
@@ -43,7 +43,7 @@ module Tobias
       parsed = TTY::Markdown.parse(<<~MARKDOWN)
         # @tobias has sent you a new message
 
-        I thought about your queries for #{thinking_time.round(2)} seconds and here is what I recommend:
+        I thought about your queries for precisely #{thinking_time.round(2)} seconds and here is what I recommend:
 
         | Query | Required work_mem |
         |-------|-------------------|
@@ -54,7 +54,8 @@ module Tobias
         To apply my recommendations, run the following SQL:
 
         ```sql
-        SET work_mem = '#{results.values.max.to_sql}';
+        ALTER SYSTEM SET work_mem = '#{results.values.max.to_sql}';
+        SELECT pg_reload_conf();
         ```
 
         Regards,
