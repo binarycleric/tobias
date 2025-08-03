@@ -6,8 +6,8 @@ Gem::Specification.new do |s|
   s.name        = "tobias"
   s.version     = Tobias::VERSION
   s.licenses    = ["MIT"]
-  s.summary     = "Tobias is a tool to help you find the optimal work_mem for your queries."
-  s.description = "Tobias is a tool to help you find the optimal work_mem for your queries."
+  s.summary     = Tobias::SUMMARY
+  s.description = Tobias::DESCRIPTION
   s.authors     = ["Jon Daniel"]
   s.email       = "binarycleric@gmail.com"
   s.homepage    = "https://github.com/binarycleric/tobias"
