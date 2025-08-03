@@ -50,6 +50,7 @@ GEM
     logger (1.7.0)
     minitest (5.25.5)
     pg (1.6.0-arm64-darwin)
+    pg (1.6.0-x86_64-linux)
     rspec (3.13.1)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -74,6 +75,7 @@ GEM
 
 PLATFORMS
   arm64-darwin
+  x86_64-linux
 
 DEPENDENCIES
   rspec (~> 3.12)
