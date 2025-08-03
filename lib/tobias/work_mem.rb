@@ -8,6 +8,22 @@ module Tobias
       @amount = amount
     end
 
+    def >(other)
+      @amount > other.amount
+    end
+
+    def <(other)
+      @amount < other.amount
+    end
+
+    def >=(other)
+      @amount >= other.amount
+    end
+
+    def <=(other)
+      @amount <= other.amount
+    end
+
     def <=>(other)
       @amount <=> other.amount
     end

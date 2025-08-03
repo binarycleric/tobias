@@ -32,7 +32,7 @@ module Tobias
           max_value = work_mem
         end
 
-        puts "#{name}:\t**should** run with #{work_mem.to_sql} of work_mem."
+        puts "#{name}:\t\t**should** run with #{work_mem.to_sql} of work_mem."
       end
 
       puts "\n\n"
