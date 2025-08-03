@@ -11,6 +11,7 @@ module Tobias
     def run(options, &block)
       WorkMem.all.each do |value|
         database.transaction do
+          database.run("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
           database.run("SET LOCAL work_mem = '#{value.to_sql}'")
           database.select(Sequel.function(:pg_stat_reset)).first
           database.instance_eval(&block)
