@@ -4,12 +4,13 @@ module Tobias
   class Evaluation
     attr_reader :database
 
-    def initialize(database)
+    def initialize(database, work_mems)
       @database = database
+      @work_mems = work_mems
     end
 
     def run(options, &block)
-      WorkMem.all.each do |value|
+      @work_mems.each do |value|
         database.transaction do
           database.run("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
           database.run("SET LOCAL work_mem = '#{value.to_sql}'")

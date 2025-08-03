@@ -66,7 +66,39 @@ module Tobias
         new(2.gigabytes),
         new(4.gigabytes),
         new(8.gigabytes),
-      ]
+      ].sort_by(&:amount)
+    end
+
+    # Inspects the database to determine the valid work_mem settings for the current user.
+    # We'll need at least connection_limit / effective_cache_size for an optimal
+    # work_mem setting, otherwise a user could run out of memory at max connections.
+    def self.valid_for(database)
+      role_conn_limit = database.select(:rolconnlimit).
+        from(:pg_roles).
+        where(rolname: Sequel.lit("current_user")).
+        first
+
+      max_connections = database.select(:setting).
+        from(:pg_settings).
+        where(name: "max_connections").
+        first
+
+      effective_cache_size = database.select(:setting, :unit).
+        from(:pg_settings).
+        where(name: "effective_cache_size").
+        first
+
+      effective_cache_size_bytes = effective_cache_size[:setting].to_i * 8 * 1024
+
+      connection_limit = if role_conn_limit[:rolconnlimit] > 0
+        role_conn_limit[:rolconnlimit]
+      else
+        max_connections[:setting].to_i
+      end
+
+      bytes_per_connection = effective_cache_size_bytes / connection_limit
+
+      self.all.select { |work_mem| work_mem.amount < bytes_per_connection.to_i }
     end
   end
 end
