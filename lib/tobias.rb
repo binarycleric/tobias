@@ -17,9 +17,13 @@ Bundler.require(:default)
 require "thor"
 require "active_support/all"
 require "sequel"
+require "enumerable-stats"
+require "benchmark"
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
 module Tobias
   autoload :CLI, "tobias/cli"
+  autoload :Evaluation, "tobias/evaluation"
+  autoload :WorkMem, "tobias/work_mem"
 end

@@ -10,33 +10,21 @@ module Tobias
 
     desc "profile SCRIPT", "profile"
     option :database_url, type: :string, required: true
+    option :iterations, type: :numeric, default: 100
     def profile(script)
       database = Sequel.connect(options[:database_url])
       database.loggers << Logger.new(nil)
       database.extension :pg_json
 
-      values = [
-        "64kB",
-        "1MB",
-        "4MB",
-        "8MB",
-        "16MB",
-        "32MB",
-        "64MB",
-        "128MB",
-        "256MB",
-        "512MB",
-        "1GB",
-        "2GB",
-        "4GB",
-        "8GB",
-      ]
+      if File.exist?(script)
+        code = File.read(script)
+      else
+        raise "Script not found at: #{script}"
+      end
 
-      code = File.read("scripts/#{script}.rb")
-
-      values.each do |value|
+      WorkMem.all.each do |value|
         database.transaction do
-          database.run("SET LOCAL work_mem = '#{value}'")
+          database.run("SET LOCAL work_mem = '#{value.to_sql}'")
 
           eval(code, binding, script)
 
@@ -44,34 +32,36 @@ module Tobias
             database.select(Sequel.function(:pg_stat_reset)).first
 
             query = instance_eval(&block)
+            times = []
 
-            10.times do
-              query.all
+            options[:iterations].to_i.times do
+              time = Benchmark.realtime do
+                database.run(query.sql)
+              end
+              times << time
             end
 
             stats = database[:pg_stat_database].where(datname: Sequel.function(:current_database)).first
 
             puts "--------------------------------"
             puts "query: #{name}"
-            puts "work_mem: #{value}"
+            puts "work_mem: #{value.to_sql}"
+            puts "clock time (mean): #{times.mean.round(2)}"
+            puts "clock time (95%): #{times.percentile(95).round(2)}"
 
             if stats[:temp_files] > 0 || stats[:temp_bytes] > 0
               puts "Not enough work_mem"
               puts "temp_files: #{stats[:temp_files]}"
               puts "temp_bytes: #{stats[:temp_bytes]}"
             else
-              puts "Enough work_mem for #{name}"
+              puts "No temporary files written."
+              puts "Current work_mem: '#{value.to_sql}' is sufficient."
+              return
             end
             puts "--------------------------------"
-
-            # puts database.fetch("EXPLAIN (ANALYZE, BUFFERS, VERBOSE) #{query.sql}").all
           end
-
         end
       end
-      # select pg_stat_reset();
-      # select * from pg_stat_database where datname = current_database();
-      # puts database.fetch("SELECT 1").first
     end
 
     private
