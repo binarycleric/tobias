@@ -73,10 +73,13 @@ Each `query` block should contain [Sequel ORM](https://sequel.jeremyevans.net/) 
 
 ```shell
 $ tobias profile scripts/tpcc.rb --database-url postgres://localhost/tpcc_test
+```
 
-# @tobias is thinking...
+### Output
 
-# @tobias has sent you a new message
+#### @tobias is thinking...
+
+#### @tobias has sent you a new message
 
 I thought about your queries for 2.34 seconds and here is what I recommend:
 
@@ -95,7 +98,6 @@ SET work_mem = '8MB';
 
 Regards,
 ~ Tobias
-```
 
 ### Output Explanation
 
