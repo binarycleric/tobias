@@ -10,10 +10,11 @@ module Tobias
 
     desc "profile SCRIPT", "profile"
     option :database_url, type: :string, required: true
-    option :iterations, type: :numeric, default: 100
+    option :iterations, type: :numeric, default: 10
+    option :debug, type: :boolean, default: false
     def profile(script)
       database = Sequel.connect(options[:database_url])
-      database.loggers << Logger.new(nil)
+      database.loggers << Logger.new(STDERR) if options[:debug]
       database.extension :pg_json
 
       if File.exist?(script)
@@ -25,14 +26,16 @@ module Tobias
       container = Container.new(code)
       max_value = nil
 
+      work_mems = WorkMem.valid_for(database)
+
       container.queries.each do |name, block|
-        work_mem = Evaluation.new(database).run(options, &block)
+        work_mem = Evaluation.new(database, work_mems).run(options, &block)
 
         if max_value.nil? || work_mem > max_value
           max_value = work_mem
         end
 
-        puts "#{name}:\t\t**should** run with #{work_mem.to_sql} of work_mem."
+        puts "#{name}:\t\t**should** run with at least #{work_mem.to_sql} of work_mem."
       end
 
       puts "\n\n"
