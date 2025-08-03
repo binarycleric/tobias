@@ -2,6 +2,8 @@
 
 module Tobias
   class Evaluation
+    attr_reader :database
+
     def initialize(database)
       @database = database
     end
@@ -27,15 +29,6 @@ module Tobias
       end
 
       raise "No work_mem found."
-    end
-
-    private
-
-    attr_reader :database
-
-    def query(name, &block)
-      @queries ||= {}
-      @queries[name] = block
     end
   end
 end
