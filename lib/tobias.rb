@@ -24,6 +24,7 @@ $LOAD_PATH.unshift File.dirname(__FILE__)
 
 module Tobias
   autoload :CLI, "tobias/cli"
+  autoload :Container, "tobias/container"
   autoload :Evaluation, "tobias/evaluation"
   autoload :WorkMem, "tobias/work_mem"
 end

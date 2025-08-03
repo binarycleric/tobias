@@ -10,30 +10,23 @@ module Tobias
       WorkMem.all.each do |value|
         database.transaction do
           database.run("SET LOCAL work_mem = '#{value.to_sql}'")
+          database.select(Sequel.function(:pg_stat_reset)).first
+          database.instance_eval(&block)
 
-          instance_eval(&block)
+          query = database.instance_eval(&block)
+          options[:iterations].to_i.times do
+            database.run(query.sql)
+          end
 
-          @queries.each do |name, block|
-            database.select(Sequel.function(:pg_stat_reset)).first
+          stats = database[:pg_stat_database].where(datname: Sequel.function(:current_database)).first
 
-            query = database.instance_eval(&block)
-            times = []
-
-            options[:iterations].to_i.times do
-              time = Benchmark.realtime do
-                database.run(query.sql)
-              end
-              times << time
-            end
-
-            stats = database[:pg_stat_database].where(datname: Sequel.function(:current_database)).first
-
-            if stats[:temp_files] == 0 && stats[:temp_bytes] == 0
-              return value
-            end
+          if stats[:temp_files] == 0 && stats[:temp_bytes] == 0
+            return value
           end
         end
       end
+
+      raise "No work_mem found."
     end
 
     private
