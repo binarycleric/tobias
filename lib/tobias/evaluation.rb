@@ -15,7 +15,6 @@ module Tobias
           database.run("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
           database.run("SET LOCAL work_mem = '#{value.to_sql}'")
           database.select(Sequel.function(:pg_stat_reset)).first
-          database.instance_eval(&block)
 
           query = database.instance_eval(&block)
           options[:iterations].to_i.times do
