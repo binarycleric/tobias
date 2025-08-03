@@ -22,12 +22,22 @@ module Tobias
         raise "Script not found at: #{script}"
       end
 
-      work_mem = Evaluation.new(database).run(options) do
-        eval(code, binding, script)
+      container = Container.new(code)
+      max_value = nil
+
+      container.queries.each do |name, block|
+        work_mem = Evaluation.new(database).run(options, &block)
+
+        if max_value.nil? || work_mem > max_value
+          max_value = work_mem
+        end
+
+        puts "#{name}:\t**should** run with #{work_mem.to_sql} of work_mem."
       end
 
-      puts "This query should run with #{work_mem.to_sql} of work_mem."
-      exit 0
+      puts "\n\n"
+      puts "To run the queries with the recommended work_mem, run:\n"
+      puts "\tSET work_mem = '#{max_value.to_sql}';"
     end
   end
 end
