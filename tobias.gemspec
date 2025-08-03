@@ -32,4 +32,5 @@ Gem::Specification.new do |s|
   s.add_dependency "pg", "~> 1.6", ">= 1.6.0"
   s.add_dependency "sequel", "~> 5.76", ">= 5.76.0"
   s.add_dependency "thor", "~> 1.3", ">= 1.3.0"
+  s.add_dependency "tty-markdown", "~> 0.7", ">= 0.7.0"
 end

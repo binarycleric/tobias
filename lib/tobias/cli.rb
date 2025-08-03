@@ -24,23 +24,37 @@ module Tobias
       end
 
       container = Container.new(code)
-      max_value = nil
-
       work_mems = WorkMem.valid_for(database)
+      results = {}
 
-      container.queries.each do |name, block|
-        work_mem = Evaluation.new(database, work_mems).run(options, &block)
+      thinking_time = Benchmark.realtime do
+        container.queries.each do |name, block|
+          work_mem = Evaluation.new(database, work_mems).run(options, &block)
 
-        if max_value.nil? || work_mem > max_value
-          max_value = work_mem
+          results[name] = work_mem
         end
-
-        puts "#{name}:\t\t**should** run with at least #{work_mem.to_sql} of work_mem."
       end
 
-      puts "\n\n"
-      puts "To run the queries with the recommended work_mem, run:\n"
-      puts "\tSET work_mem = '#{max_value.to_sql}';"
+      parsed = TTY::Markdown.parse(<<~MARKDOWN)
+        # Tobias has sent you a new message
+
+        I thought about your queries for #{thinking_time.round(2)} seconds and here is what I recommend:
+
+        | Query | Required work_mem |
+        |-------|-------------------|
+        #{results.map { |name, work_mem| "| #{name} | #{work_mem.to_sql} |" }.join("\n")}
+
+        To apply my recommendations, run the following SQL:
+
+        ```sql
+        SET work_mem = '#{results.values.max.to_sql}';
+        ```
+
+        Regards,
+        ~ Tobias
+      MARKDOWN
+
+      puts parsed
     end
   end
 end

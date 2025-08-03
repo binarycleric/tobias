@@ -19,6 +19,7 @@ require "active_support/all"
 require "sequel"
 require "enumerable-stats"
 require "benchmark"
+require "tty-markdown"
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
