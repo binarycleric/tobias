@@ -10,7 +10,7 @@ module Tobias
 
     desc "profile SCRIPT", "profile"
     option :database_url, type: :string, required: true
-    option :iterations, type: :numeric, default: 100
+    option :iterations, type: :numeric, default: 10
     option :debug, type: :boolean, default: false
     def profile(script)
       database = Sequel.connect(options[:database_url])
@@ -24,7 +24,6 @@ module Tobias
       end
 
       container = Container.new(code)
-      work_mems = WorkMem.valid_for(database)
       results = {}
 
       parsed = TTY::Markdown.parse(<<~MARKDOWN)
@@ -33,11 +32,7 @@ module Tobias
       puts parsed
 
       thinking_time = Benchmark.realtime do
-        container.queries.each do |name, block|
-          work_mem = Evaluation.new(database, work_mems).run(options, &block)
-
-          results[name] = work_mem
-        end
+        results = Evaluations.run(database, container, options)
       end
 
       parsed = TTY::Markdown.parse(<<~MARKDOWN)
@@ -45,18 +40,7 @@ module Tobias
 
         I thought about your queries for precisely #{thinking_time.round(2)} seconds and here is what I recommend:
 
-        | Query | Required work_mem |
-        |-------|-------------------|
-        #{results.map { |name, work_mem| "| #{name} | #{work_mem.to_sql} |" }.join("\n")}
-
-        Your application will need to run with at least #{results.values.max.to_sql} of work_mem.
-
-        To apply my recommendations, run the following SQL:
-
-        ```sql
-        ALTER SYSTEM SET work_mem = '#{results.values.max.to_sql}';
-        SELECT pg_reload_conf();
-        ```
+        #{results.join("\n")}
 
         Regards,
         ~ Tobias
