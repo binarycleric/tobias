@@ -3,24 +3,25 @@
 module Tobias
   module Evaluations
     class Base
-      attr_reader :database, :container
+      attr_reader :database, :container, :options
 
-      def initialize(database, container)
+      def initialize(database, container, options)
         @database = database
         @container = container
+        @options = options
       end
 
-      def run(options, &block)
+      def run(&block)
         results = {}
 
         container.queries.each do |name, query|
-          results.merge!(run_each(name, query, options))
+          results.merge!(run_each(name, query))
         end
 
         to_markdown(results)
       end
 
-      def run_each(query, options)
+      def run_each(query)
         raise NotImplementedError
       end
 
