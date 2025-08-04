@@ -67,46 +67,14 @@ query(:heavy_join) do
 end
 ```
 
-Each `query` block should contain [Sequel ORM](https://sequel.jeremyevans.net/) code that builds and returns a dataset.
+Each `query` block should contain [Sequel ORM](https://sequel.jeremyevans.net/)
+code that builds and returns a dataset.
 
 ### Example Run
 
 ```shell
 $ tobias profile scripts/tpcc.rb --database-url postgres://localhost/tpcc_test
 ```
-
-### Output
-
-#### @tobias is thinking...
-
-#### @tobias has sent you a new message
-
-I thought about your queries for 2.34 seconds and here is what I recommend:
-
-| Query | Required work_mem |
-|-------|-------------------|
-| stock_by_warehouse_and_district | 4MB |
-| order_lines_by_warehouse | 8MB |
-
-Your application will need to run with at least 8MB of work_mem.
-
-To apply my recommendations, run the following SQL:
-
-```sql
-SET work_mem = '8MB';
-```
-
-Regards,
-~ Tobias
-
-### Output Explanation
-
-- Tobias shows a "thinking" phase while analyzing your queries
-- Results are presented in a friendly, conversational format with timing information
-- A table shows the minimum `work_mem` needed for each query to avoid temporary files
-- The final recommendation uses the maximum `work_mem` needed across all queries
-- This ensures all your queries will run efficiently in memory
-- The output includes ready-to-use SQL for applying the recommendations
 
 ## Example Script
 
