@@ -25,6 +25,21 @@ RSpec.describe Tobias::WorkMem do
       work_mem = described_class.from_sql("1024B")
       expect(work_mem.to_sql).to eq("1kB")
     end
+
+    it "parses kilobytes" do
+      work_mem = described_class.from_sql("1024kB")
+      expect(work_mem.to_sql).to eq("1MB")
+    end
+
+    it "parses megabytes" do
+      work_mem = described_class.from_sql("500MB")
+      expect(work_mem.to_sql).to eq("500MB")
+    end
+
+    it "parses gigabytes" do
+      work_mem = described_class.from_sql("1GB")
+      expect(work_mem.to_sql).to eq("1GB")
+    end
   end
 
   describe "#to_sql" do
