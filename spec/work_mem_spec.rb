@@ -20,6 +20,13 @@ RSpec.describe Tobias::WorkMem do
     end
   end
 
+  describe "self.from_sql" do
+    it "parses bytes" do
+      work_mem = described_class.from_sql("1024B")
+      expect(work_mem.to_sql).to eq("1kB")
+    end
+  end
+
   describe "#to_sql" do
     context "when amount is in bytes (< 1024)" do
       it "formats small values in bytes" do
