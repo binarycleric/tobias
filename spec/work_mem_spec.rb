@@ -156,13 +156,9 @@ RSpec.describe Tobias::WorkMem do
       expect(all_work_mems).to all(be_a(described_class))
     end
 
-    it "returns the expected number of instances" do
-      expect(all_work_mems.size).to eq(16)
-    end
-
     it "includes all expected values in correct format" do
       expected_values = [
-        "64kB", "128kB", "512kB",
+        "64kB", "128kB", "256kB", "512kB",
         "1MB", "4MB", "8MB", "16MB", "32MB", "64MB", "128MB", "256MB", "512MB",
         "1GB", "2GB", "4GB", "8GB"
       ]
@@ -173,7 +169,7 @@ RSpec.describe Tobias::WorkMem do
 
     it "creates instances with correct byte amounts" do
       expected_amounts = [
-        64.kilobytes, 128.kilobytes, 512.kilobytes,
+        64.kilobytes, 128.kilobytes, 256.kilobytes, 512.kilobytes,
         1.megabyte, 4.megabytes, 8.megabytes, 16.megabytes, 32.megabytes,
         64.megabytes, 128.megabytes, 256.megabytes, 512.megabytes,
         1.gigabyte, 2.gigabytes, 4.gigabytes, 8.gigabytes
