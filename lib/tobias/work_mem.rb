@@ -52,6 +52,7 @@ module Tobias
       [
         new(64.kilobytes),
         new(128.kilobytes),
+        new(256.kilobytes),
         new(512.kilobytes),
         new(1.megabyte),
         new(4.megabytes),
