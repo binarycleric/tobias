@@ -12,7 +12,7 @@ module Tobias
         "Optional work_mem settings"
       end
 
-      def run_each(name, query, options)
+      def run_each(name, query)
         work_mems.each do |value|
           database.transaction do
             database.run("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
