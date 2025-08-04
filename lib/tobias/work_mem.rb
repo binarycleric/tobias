@@ -4,6 +4,21 @@ module Tobias
   class WorkMem
     attr_reader :amount
 
+    def self.from_sql(sql)
+      case sql
+      when /^\d+B$/
+        new(sql.to_i)
+      when /^\d+kB$/
+        new(sql.to_i * 1024)
+      when /^\d+MB$/
+        new(sql.to_i * 1024 * 1024)
+      when /^\d+GB$/
+        new(sql.to_i * 1024 * 1024 * 1024)
+      else
+        raise "Invalid work_mem setting: #{sql}"
+      end
+    end
+
     def initialize(amount)
       @amount = amount
     end

@@ -37,6 +37,8 @@ module Tobias
       end
 
       def to_markdown(results)
+        current_work_mem = Tobias::WorkMem.from_sql(database.fetch("SHOW work_mem").first[:work_mem])
+
         <<~MARKDOWN
           ## #{description}
 
@@ -45,6 +47,8 @@ module Tobias
           #{results.map { |name, work_mem| "| #{name} | #{work_mem.to_sql} |" }.join("\n")}
 
           Your application will need to run with at least #{results.values.max.to_sql} of work_mem.
+
+          I see that your current work_mem setting is #{current_work_mem.to_sql}.
 
           To apply my recommendations, run the following SQL:
 
