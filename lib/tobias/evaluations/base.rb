@@ -44,7 +44,7 @@ module Tobias
           results << run_each(name, query)
         end
 
-        to_markdown(results)
+        to_markdown(results.compact)
       end
 
       def run_each(query)
