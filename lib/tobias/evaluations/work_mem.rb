@@ -1,5 +1,17 @@
 # frozen_string_literal: true
 
+class MarkdownTableBorder < TTY::Table::Border
+  def_border do
+    left         "|"
+    center       "|"
+    right        "|"
+    bottom       " "
+    bottom_mid   " "
+    bottom_left  " "
+    bottom_right " "
+  end
+end
+
 module Tobias
   module Evaluations
     class WorkMem < Base
@@ -39,12 +51,15 @@ module Tobias
       def to_markdown(results)
         current_work_mem = Tobias::WorkMem.from_sql(database.fetch("SHOW work_mem").first[:work_mem])
 
+        table = TTY::Table.new(header: ["Query", "Required work_mem"])
+        results.each do |name, work_mem|
+          table << [name, work_mem.to_sql]
+        end
+
         <<~MARKDOWN
           ## #{description}
 
-          | Query | Required work_mem |
-          |-------|-------------------|
-          #{results.map { |name, work_mem| "| #{name} | #{work_mem.to_sql} |" }.join("\n")}
+          #{table.render_with(MarkdownTableBorder)}
 
           I see that your current `work_mem` setting is `#{current_work_mem.to_sql}`.
 
