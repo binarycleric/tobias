@@ -1,17 +1,5 @@
 # frozen_string_literal: true
 
-class MarkdownTableBorder < TTY::Table::Border
-  def_border do
-    left         "|"
-    center       "|"
-    right        "|"
-    bottom       " "
-    bottom_mid   " "
-    bottom_left  " "
-    bottom_right " "
-  end
-end
-
 module Tobias
   module Evaluations
     class WorkMem < Base
@@ -25,35 +13,45 @@ module Tobias
       end
 
       def run_each(name, query)
+        database.run("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
+
+        times = Concurrent::Array.new
+
         work_mems.each do |value|
           database.transaction do
-            database.run("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
             database.run("SET LOCAL work_mem = '#{value.to_sql}'")
             database.select(Sequel.function(:pg_stat_reset)).first
 
             query_result = database.instance_eval(&query)
             options[:iterations].to_i.times do
-              database.run(query_result.sql)
+              times << Benchmark.realtime do
+                database.run(query_result.sql)
+              end
             end
 
             stats = database[:pg_stat_database].where(datname: Sequel.function(:current_database)).first
 
             if stats[:temp_files] == 0 && stats[:temp_bytes] == 0
-              return { name => value }
+              return Result.new(name: name, value: value, times: times)
             end
           end
         end
 
         # TODO: Add a warning message or something.
-        return { name => nil }
+        raise "Couldn't figure out work_mem."
       end
 
       def to_markdown(results)
         current_work_mem = Tobias::WorkMem.from_sql(database.fetch("SHOW work_mem").first[:work_mem])
 
-        table = TTY::Table.new(header: ["Query", "Required work_mem"])
-        results.each do |name, work_mem|
-          table << [name, work_mem.to_sql]
+        table = TTY::Table.new(header: ["Query", "Required work_mem", "p99 Time", "Average"])
+        results.each do |result|
+          table << [
+            result.name,
+            result.value.to_sql,
+            result.p99_time.round(2),
+            result.average_time.round(2)
+          ]
         end
 
         <<~MARKDOWN
@@ -63,12 +61,12 @@ module Tobias
 
           I see that your current `work_mem` setting is `#{current_work_mem.to_sql}`.
 
-          Your application will need to run with at least `#{results.values.max.to_sql}` of `work_mem`.
+          Your application will need to run with at least `#{results.max(&:value).value.to_sql}` of `work_mem`.
 
           To apply my recommendations, run the following SQL:
 
           ```sql
-          ALTER SYSTEM SET work_mem = '#{results.values.max.to_sql}';
+          ALTER SYSTEM SET work_mem = '#{results.max(&:value).value.to_sql}';
           SELECT pg_reload_conf();
           ```
         MARKDOWN

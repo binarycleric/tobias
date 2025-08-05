@@ -10,7 +10,7 @@ module Tobias
 
     desc "profile SCRIPT", "profile"
     option :database_url, type: :string, required: true
-    option :iterations, type: :numeric, default: 10
+    option :iterations, type: :numeric, default: 50
     option :debug, type: :boolean, default: false
     def profile(script)
       database = Sequel.connect(options[:database_url])
