@@ -36,12 +36,20 @@ module Tobias
             end
           end
         end
-
-        # TODO: Add a warning message or something.
-        raise "Couldn't figure out work_mem."
       end
 
       def to_markdown(results)
+        if results.empty?
+          return <<~MARKDOWN
+            ## #{description}
+
+            I couldn't figure out the required `work_mem` setting for your query.
+
+            Please open an issue at https://github.com/binarycleric/tobias/issues
+            and include your query script and copy of your database schema.
+          MARKDOWN
+        end
+
         current_work_mem = Tobias::WorkMem.from_sql(database.fetch("SHOW work_mem").first[:work_mem])
 
         table = TTY::Table.new(header: ["Query", "Required work_mem", "p99 Time", "Average"])
