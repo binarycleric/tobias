@@ -15,6 +15,6 @@ query(:stock_by_warehouse_and_district) do
     where(Sequel.lit("s_quantity < ?", threshold)).
     order(:s_quantity).
     group(:s_i_id, :s_quantity).
-    limit(1_000).
+    limit(2_000).
     select(Sequel.function(:count, Sequel.function(:distinct, :s_i_id)).as(:count))
 end
