@@ -15,6 +15,10 @@ end
 module Tobias
   module Evaluations
     Result = Struct.new(:name, :value, :times, keyword_init: true) do
+      def <=>(other)
+        value <=> other.value
+      end
+
       def sample_count
         times.count
       end
@@ -41,10 +45,11 @@ module Tobias
         results = Concurrent::Array.new
 
         container.queries.each do |name, query|
-          results << run_each(name, query)
+          result = run_each(name, query)
+          results << result if result
         end
 
-        to_markdown(results.compact)
+        to_markdown(results)
       end
 
       def run_each(query)
