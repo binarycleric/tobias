@@ -62,6 +62,8 @@ module Tobias
           ]
         end
 
+        max_work_mem = results.max.value.to_sql
+
         <<~MARKDOWN
           ## #{description}
 
@@ -69,12 +71,12 @@ module Tobias
 
           I see that your current `work_mem` setting is `#{current_work_mem.to_sql}`.
 
-          Your application will need to run with at least `#{results.max(&:value).value.to_sql}` of `work_mem`.
+          Your application will need to run with at least `#{max_work_mem}` of `work_mem`.
 
           To apply my recommendations, run the following SQL:
 
           ```sql
-          ALTER SYSTEM SET work_mem = '#{results.max(&:value).value.to_sql}';
+          ALTER SYSTEM SET work_mem = '#{max_work_mem}';
           SELECT pg_reload_conf();
           ```
         MARKDOWN

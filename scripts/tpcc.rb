@@ -21,3 +21,17 @@ query(:stock_by_warehouse_and_district) do
     limit(2_000).
     select(Sequel.function(:count, Sequel.function(:distinct, :s_i_id)).as(:count))
 end
+
+query(:most_active_districts) do
+  from(:district).
+    join(:order_line, [[:ol_d_id, :d_id], [:ol_w_id, :d_w_id]]).
+    group(:d_w_id, :d_id, :d_name).
+    select(
+    :d_w_id,
+    :d_id,
+    :d_name,
+    Sequel.function(:count, :ol_number).as(:order_line_count)
+  ).
+  order(Sequel.desc(:order_line_count)).
+  limit(100)
+end

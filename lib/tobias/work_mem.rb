@@ -65,11 +65,12 @@ module Tobias
 
     def self.all
       [
-        new(64.kilobytes),
-        new(128.kilobytes),
-        new(256.kilobytes),
-        new(512.kilobytes),
-        new(1.megabyte),
+        # Removing lower values as they aren't really relevant with modern hardware.
+        # new(64.kilobytes),
+        # new(128.kilobytes),
+        # new(256.kilobytes),
+        # new(512.kilobytes),
+        # new(1.megabyte),
         new(4.megabytes),
         new(8.megabytes),
         new(16.megabytes),
