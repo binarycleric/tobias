@@ -4,7 +4,8 @@ module Tobias
   class Container
     def initialize(code)
       @code = code
-      @queries = {}
+      @queries = Concurrent::Hash.new
+      @sql = Concurrent::Hash.new
 
       eval(code, binding, __FILE__, __LINE__)
     end
@@ -13,8 +14,8 @@ module Tobias
       @queries
     end
 
-    def query(name, &block)
-      @queries[name] = block
+    def query(name, sql = nil, &block)
+      @queries[name] = sql || block
     end
   end
 end
