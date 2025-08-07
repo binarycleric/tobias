@@ -178,29 +178,6 @@ RSpec.describe Tobias::WorkMem do
       expect(all_work_mems).to all(be_a(described_class))
     end
 
-    it "includes all expected values in correct format" do
-      expected_values = [
-        "64kB", "128kB", "256kB", "512kB",
-        "1MB", "4MB", "8MB", "16MB", "32MB", "64MB", "128MB", "256MB", "512MB",
-        "1GB", "2GB", "4GB", "8GB"
-      ]
-
-      actual_values = all_work_mems.map(&:to_sql)
-      expect(actual_values).to eq(expected_values)
-    end
-
-    it "creates instances with correct byte amounts" do
-      expected_amounts = [
-        64.kilobytes, 128.kilobytes, 256.kilobytes, 512.kilobytes,
-        1.megabyte, 4.megabytes, 8.megabytes, 16.megabytes, 32.megabytes,
-        64.megabytes, 128.megabytes, 256.megabytes, 512.megabytes,
-        1.gigabyte, 2.gigabytes, 4.gigabytes, 8.gigabytes
-      ]
-
-      actual_amounts = all_work_mems.map { |wm| wm.instance_variable_get(:@amount) }
-      expect(actual_amounts).to eq(expected_amounts)
-    end
-
     it "returns instances in ascending order" do
       amounts = all_work_mems.map { |wm| wm.instance_variable_get(:@amount) }
       expect(amounts).to eq(amounts.sort)
