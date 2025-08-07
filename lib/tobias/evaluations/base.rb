@@ -14,21 +14,9 @@ end
 
 module Tobias
   module Evaluations
-    Result = Struct.new(:name, :value, :times, keyword_init: true) do
+    Result = Struct.new(:name, :value, keyword_init: true) do
       def <=>(other)
         value <=> other.value
-      end
-
-      def sample_count
-        times.count
-      end
-
-      def average_time
-        times.mean
-      end
-
-      def p99_time
-        times.percentile(99)
       end
     end
 
