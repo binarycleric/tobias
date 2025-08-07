@@ -26,7 +26,7 @@ module Tobias
         # @tobias has sent you a new message
 
         I've reviewed your database by analyzing your shared buffers and connection limits and
-        I recommend setting `work_mem` to `#{work_mem.to_sql}`. To apply my recommendations, run the following SQL:
+        recommend setting `work_mem` to `#{work_mem.to_sql}`. To apply my recommendation, run the following SQL:
 
         ```sql
         ALTER SYSTEM SET work_mem = '#{work_mem.to_sql}';
