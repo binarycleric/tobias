@@ -3,5 +3,8 @@
 
 require_relative "../lib/tobias"
 
-RubyVM::YJIT.enable
+if defined?(RubyVM::YJIT)
+  RubyVM::YJIT.enable
+end
+
 Tobias::CLI.start(ARGV, exit_on_failure: true)

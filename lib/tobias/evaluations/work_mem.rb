@@ -22,8 +22,6 @@ module Tobias
 
             sql = query.is_a?(String) ? query : database.instance_eval(&query).sql
 
-            puts database.fetch("EXPLAIN #{sql}").first
-
             database.run(sql)
 
             stats = database[:pg_stat_database].
