@@ -32,10 +32,14 @@ module Tobias
       def run(&block)
         results = Concurrent::Array.new
 
+        container.run_setup(database)
+
         container.queries.each do |name, query|
           result = run_each(name, query)
           results << result if result
         end
+
+        container.run_teardown(database)
 
         to_markdown(results)
       end
