@@ -3,9 +3,12 @@
 module Tobias
   module Evaluations
     class WorkMem < Base
-
       def work_mems
-        Tobias::WorkMem.valid_for(database)
+        @work_mems ||= Tobias::WorkMem.valid_for(database)
+      end
+
+      def current_work_mem
+        @current_work_mem ||= Tobias::WorkMem.from_sql(database.fetch("SHOW work_mem").first[:work_mem])
       end
 
       def description
@@ -39,42 +42,19 @@ module Tobias
       end
 
       def to_markdown(results)
-        if results.empty?
-          return <<~MARKDOWN
-            ## #{description}
-
-            I couldn't figure out the required `work_mem` setting for your query.
-
-            Please open an issue at https://github.com/binarycleric/tobias/issues
-            and include your query script and copy of your database schema.
-          MARKDOWN
-        end
-
-        current_work_mem = Tobias::WorkMem.from_sql(database.fetch("SHOW work_mem").first[:work_mem])
-
-        table = TTY::Table.new(header: ["Query", "Required work_mem"])
-        results.each do |result|
-          table << [
-            result.name,
-            result.value.to_sql,
-          ]
-        end
-
-        max_work_mem = results.max.value.to_sql
-
         <<~MARKDOWN
           ## #{description}
 
-          #{table.render_with(MarkdownTableBorder)}
+          #{render_table(headers: ["Query", "Required work_mem"], body: results.map { |r| [r.name, r.value.to_sql] })}
 
           I see that your current `work_mem` setting is `#{current_work_mem.to_sql}`.
 
-          Your application will need to run with at least `#{max_work_mem}` of `work_mem`.
+          Your application will need to run with at least `#{results.max.value.to_sql}` of `work_mem`.
 
           To apply my recommendations, run the following SQL:
 
           ```sql
-          ALTER SYSTEM SET work_mem = '#{max_work_mem}';
+          ALTER SYSTEM SET work_mem = '#{results.max.value.to_sql}';
           SELECT pg_reload_conf();
           ```
         MARKDOWN

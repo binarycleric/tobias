@@ -51,6 +51,15 @@ module Tobias
       def to_markdown(results)
         raise NotImplementedError
       end
+
+      def render_table(headers:, body:)
+        table = TTY::Table.new(header: headers)
+        body.each do |row|
+          table << row
+        end
+
+        table.render_with(MarkdownTableBorder)
+      end
     end
   end
 end
