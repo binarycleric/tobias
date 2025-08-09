@@ -13,6 +13,7 @@ module Tobias
     option :debug, type: :boolean, default: false
     def recommend
       database = Sequel.connect(options[:database_url])
+      database.extension :pgvector
       database.loggers << Logger.new(STDERR) if options[:debug]
 
       parsed = TTY::Markdown.parse(<<~MARKDOWN)
@@ -43,9 +44,10 @@ module Tobias
     option :database_url, type: :string, required: true
     option :debug, type: :boolean, default: false
     def profile(script)
-      database = Sequel.connect(options[:database_url])
+      database = Sequel.connect(options[:database_url], max_connections: Etc.nprocessors + 2)
       database.loggers << Logger.new(STDERR) if options[:debug]
       database.extension :pg_json
+      database.extension :pgvector
 
       if File.exist?(script)
         code = File.read(script)

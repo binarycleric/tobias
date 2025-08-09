@@ -17,6 +17,7 @@ Bundler.require(:default)
 require "thor"
 require "active_support/all"
 require "sequel"
+require "pgvector"
 require "enumerable-stats"
 require "benchmark"
 require "tty-markdown"
