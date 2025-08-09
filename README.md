@@ -29,7 +29,6 @@ $ tobias profile path/to/your/script.rb --database-url <database-url>
 ### Options
 
 - `--database-url`: PostgreSQL connection string (required)
-- `--iterations`: Number of times to run each query for testing (default: 10)
 - `--debug`: Enable debug logging (default: false)
 
 ### Creating Query Scripts
