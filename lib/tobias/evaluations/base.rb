@@ -39,9 +39,9 @@ module Tobias
           results << result if result
         end
 
-        container.run_teardown(database)
-
         to_markdown(results)
+      ensure
+        container.run_teardown(database)
       end
 
       def run_each(query)
