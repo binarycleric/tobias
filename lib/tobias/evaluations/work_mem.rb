@@ -22,10 +22,7 @@ module Tobias
           database.transaction do
             database.run("SET LOCAL work_mem = '#{value.to_sql}'")
             database.select(Sequel.function(:pg_stat_reset)).first
-
-            sql = query.is_a?(String) ? query : database.instance_eval(&query).sql
-
-            database.run(sql)
+            container.run_query(query, database)
 
             stats = database[:pg_stat_database].
               where(datname: Sequel.function(:current_database)).

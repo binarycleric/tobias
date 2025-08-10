@@ -1,22 +1,28 @@
 # frozen_string_literal: true
 
+TOTAL_ROWS = 10_000_000
+
 setup do
-  run(<<~SQL)
-    CREATE TABLE IF NOT EXISTS workmem_stress (
-      id SERIAL PRIMARY KEY,
-      name TEXT,
-      value INTEGER,
-      payload TEXT
-    )
-  SQL
+  create_table? :workmem_stress do
+    primary_key :id
+    column :name, String
+    column :value, Integer
+    column :payload, String
+  end
+end
 
-  transaction do |c|
-    1_000_000.times do |i|
-      name = "name_#{i % 1000}"
-      value = rand(1..10_000)
-      payload = SecureRandom.hex(128)
+load_data do
+  loop do
+    break if from(:workmem_stress).count >= TOTAL_ROWS
 
-      from(:workmem_stress).insert(name: name, value: value, payload: payload)
+    100.times do
+      from(:workmem_stress).multi_insert(1000.times.map do
+        {
+          name: "name_#{Random.rand(1..1000)}",
+          value: Random.rand(1..10_000),
+          payload: SecureRandom.hex(128)
+        }
+      end)
     end
   end
 end

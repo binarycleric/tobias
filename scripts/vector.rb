@@ -11,25 +11,20 @@ setup do
     primary_key :id
     column :embedding, "vector(#{VECTOR_DIMENSION})"
   end
+end
 
-  Etc.nprocessors.times do
-    fork do
-      disconnect
+load_data do
+  loop do
+    break if from(:items).count >= TOTAL_VECTORS
 
-      loop do
-        break if from(:items).count >= TOTAL_VECTORS
-
-        50.times do
-          from(:items).multi_insert(500.times.map do
-            { embedding: ::Pgvector.encode(VECTOR_DIMENSION.times.map { Random.rand(-1.0..1.0) }) }
-          end)
-        end
-      end
+    100.times do
+      from(:items).multi_insert(1000.times.map do
+        {
+          embedding: ::Pgvector.encode(VECTOR_DIMENSION.times.map { Random.rand(-1.0..1.0) })
+        }
+      end)
     end
   end
-
-  disconnect
-  Process.waitall
 end
 
 teardown do
