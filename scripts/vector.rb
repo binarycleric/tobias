@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-TOTAL_VECTORS = 5_000_000
+TOTAL_VECTORS = 1_000_000
 VECTOR_DIMENSION = 1536
 STARTING_POINT = VECTOR_DIMENSION.times.map { Random.rand(-1.0..1.0) }
 
