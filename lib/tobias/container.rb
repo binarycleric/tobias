@@ -19,12 +19,12 @@ module Tobias
       def run_parallel(list, &block)
         list.each do |l|
           fork do
-            disconnect
-            yield l
+            Sequel::DATABASES.each(&:disconnect)
+            block.call(l)
           end
         end
 
-        disconnect
+        Sequel::DATABASES.each(&:disconnect)
         Process.waitall
       end
     end

@@ -20,16 +20,16 @@ setup do
     column :embedding, "vector(#{dimensions})"
   end
 
-  class Item < Sequel::Model(:items)
-    plugin :pgvector, :embedding
-  end
+  `hf download KShivendu/dbpedia-entities-openai-1M --repo-type=dataset --local-dir /tmp/dbpedia-entities-openai-1M`
 
-  run_parallel(Dir.glob("/Users/jon/src/dbpedia-entities-openai-1M/data/*.parquet")) do |file|
+  run_parallel(Dir.glob("/tmp/dbpedia-entities-openai-1M/data/*.parquet")) do |file|
+    puts "Processing #{file} from #{Process.pid}."
+
     Parquet.each_row(file) do |row|
-      Item.create(
+      from(:items).insert(
         title: row["title"],
         text: row["text"],
-        embedding: row["openai"]
+        embedding: "[#{row["openai"].join(",")}]"
       )
     end
   end
