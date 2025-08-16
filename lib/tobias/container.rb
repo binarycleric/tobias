@@ -15,20 +15,17 @@ module Tobias
       eval(code, binding, __FILE__, __LINE__)
     end
 
-    def run_setup(context)
-      run_action(@setup, context)
+    module DefaultHelpers
+      def run_parallel(list, &block)
+        promises = list.map do |item|
+          Concurrent::Promise.execute { yield(item) }
+        end
+        Concurrent::Promise.zip(*promises).wait
+      end
     end
 
-    def run_load_data(context)
-      Etc.nprocessors.times do
-        fork do
-          context.disconnect
-          run_action(@load_data, context)
-        end
-      end
-
-      context.disconnect
-      Process.waitall
+    def run_setup(context)
+      run_action(@setup, context)
     end
 
     def run_query(query, context)
@@ -50,6 +47,7 @@ module Tobias
       helpers = @helpers
 
       context.class_eval do
+        include DefaultHelpers
         include helpers
 
         def options=(new_options)
