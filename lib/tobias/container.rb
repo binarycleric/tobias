@@ -15,20 +15,26 @@ module Tobias
       eval(code, binding, __FILE__, __LINE__)
     end
 
-    def run_setup(context)
-      run_action(@setup, context)
-    end
-
-    def run_load_data(context)
-      Etc.nprocessors.times do
-        fork do
-          context.disconnect
-          run_action(@load_data, context)
+    module DefaultHelpers
+      def run_parallel(list, &block)
+        list.each do |l|
+          fork do
+            Sequel::DATABASES.each(&:disconnect)
+            block.call(l)
+          end
         end
+
+        Sequel::DATABASES.each(&:disconnect)
+        Process.waitall
       end
 
-      context.disconnect
-      Process.waitall
+      def download_from_hugging_face(repo, local_dir="/tmp/#{repo}")
+        `hf download #{repo} --repo-type=dataset --local-dir #{local_dir}`
+      end
+    end
+
+    def run_setup(context)
+      run_action(@setup, context)
     end
 
     def run_query(query, context)
@@ -50,6 +56,7 @@ module Tobias
       helpers = @helpers
 
       context.class_eval do
+        include DefaultHelpers
         include helpers
 
         def options=(new_options)

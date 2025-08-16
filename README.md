@@ -7,6 +7,14 @@ Tobias is your friendly PostgreSQL DBA who is obsessed with optimizing your data
 
 Named after a nerdy but friendly DBA who is obsessed with query performance, Tobias helps you find the optimal `work_mem` setting for your PostgreSQL queries. It runs your queries with various memory settings to determine the minimum `work_mem` needed to keep your queries entirely in memory without creating temporary files.
 
+## Prerequisites
+
+You'll need the huggingface CLI. On macOS you can install it via Homebrew:
+
+```shell
+$ brew install huggingface-cli
+```
+
 ## Installation
 
 ```shell

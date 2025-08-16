@@ -33,7 +33,6 @@ module Tobias
         results = Concurrent::Array.new
 
         container.run_setup(database)
-        container.run_load_data(database)
         container.queries.each do |name, query|
           result = run_each(name, query)
           results << result if result
