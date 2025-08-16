@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-TOTAL_ROWS = 10_000_000
+option(:total_rows, 10_000_000)
 
 setup do
   create_table? :workmem_stress do
@@ -13,7 +13,7 @@ end
 
 load_data do
   loop do
-    break if from(:workmem_stress).count >= TOTAL_ROWS
+    break if from(:workmem_stress).count >= options.total_rows
 
     100.times do
       from(:workmem_stress).multi_insert(1000.times.map do

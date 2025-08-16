@@ -6,6 +6,7 @@ module Tobias
       @code = code
       @queries = Concurrent::Hash.new
       @sql = Concurrent::Hash.new
+      @options = Concurrent::Hash.new
       @setup = Proc.new { }
       @teardown = Proc.new { }
       @load_data = Proc.new { }
@@ -14,14 +15,14 @@ module Tobias
     end
 
     def run_setup(context)
-      context.instance_eval(&@setup)
+      run_action(@setup, context)
     end
 
     def run_load_data(context)
       Etc.nprocessors.times do
         fork do
           context.disconnect
-          context.instance_eval(&@load_data)
+          run_action(@load_data, context)
         end
       end
 
@@ -30,17 +31,41 @@ module Tobias
     end
 
     def run_query(query, context)
-      sql = query.is_a?(String) ? query : context.instance_eval(&query).sql
+      sql = if query.is_a?(String)
+               query
+             else
+               run_action(query, context).sql
+             end
 
       context.run(sql)
     end
 
     def run_teardown(context)
-      context.instance_eval(&@teardown)
+      run_action(@teardown, context)
+    end
+
+    def run_action(action, context)
+      options = Struct.new(*@options.keys).new(*@options.values)
+      context.class_eval do
+        def options=(new_options)
+          @options = new_options
+        end
+
+        def options
+          @options
+        end
+      end
+
+      context.options = options
+      context.instance_eval(&action)
     end
 
     def queries
       @queries
+    end
+
+    def option(name, default = nil, &block)
+      @options[name] = block || default
     end
 
     def setup(&block)

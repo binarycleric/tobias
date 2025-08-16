@@ -20,6 +20,7 @@ require "sequel"
 require "pgvector"
 require "enumerable-stats"
 require "benchmark"
+require "parquet"
 require "tty-markdown"
 require "tty-table"
 
