@@ -30,6 +30,8 @@ setup do
       )
     end
   end
+
+  run("CREATE INDEX IF NOT EXISTS items_embedding_idx ON items USING ivfflat (embedding) WITH (lists = 100)")
 end
 
 teardown do

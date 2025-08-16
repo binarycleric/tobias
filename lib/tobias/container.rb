@@ -17,15 +17,18 @@ module Tobias
 
     module DefaultHelpers
       def run_parallel(list, &block)
-        list.each do |l|
-          fork do
-            Sequel::DATABASES.each(&:disconnect)
-            block.call(l)
+        thread_pool = Concurrent::ThreadPoolExecutor.new(
+          min_threads: 2,
+          max_threads: Etc.nprocessors + 2,
+          max_queue: 100
+        )
+
+        promises = list.map do |item|
+          Concurrent::Promise.execute(executor: thread_pool) do
+            block.call(item)
           end
         end
-
-        Sequel::DATABASES.each(&:disconnect)
-        Process.waitall
+        Concurrent::Promise.zip(*promises).wait!
       end
 
       def download_from_hugging_face(repo, local_dir="/tmp/#{repo}")
