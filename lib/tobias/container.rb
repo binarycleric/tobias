@@ -10,6 +10,7 @@ module Tobias
       @setup = Proc.new { }
       @teardown = Proc.new { }
       @load_data = Proc.new { }
+      @helpers = Module.new
 
       eval(code, binding, __FILE__, __LINE__)
     end
@@ -46,7 +47,11 @@ module Tobias
 
     def run_action(action, context)
       options = Struct.new(*@options.keys).new(*@options.values)
+      helpers = @helpers
+
       context.class_eval do
+        include helpers
+
         def options=(new_options)
           @options = new_options
         end
@@ -66,6 +71,10 @@ module Tobias
 
     def option(name, default = nil, &block)
       @options[name] = block || default
+    end
+
+    def helpers(&block)
+      @helpers.class_eval(&block) if block_given?
     end
 
     def setup(&block)

@@ -1,7 +1,13 @@
 # frozen_string_literal: true
 
-option(:total_vectors, 1_000_000)
+option(:total_vectors, 5_000_000)
 option(:vector_dimension, 1_536)
+
+helpers do
+  def random_vector(size: options.vector_dimension)
+    Array.new(size) { rand(-1.0..1.0) }
+  end
+end
 
 setup do
   run("CREATE EXTENSION IF NOT EXISTS vector")
@@ -19,7 +25,7 @@ load_data do
 
     from(:items).multi_insert(1_000.times.map do
       {
-        embedding: ::Pgvector.encode(options.vector_dimension.times.map { Random.rand(-1.0..1.0) })
+        embedding: ::Pgvector.encode(random_vector)
       }
     end)
   end
@@ -31,36 +37,30 @@ teardown do
 end
 
 query(:euclidean_nearest_neighbors) do
-  starting_point = options.vector_dimension.times.map { Random.rand(-1.0..1.0) }
-
   from(:items).
     nearest_neighbors(
       :embedding,
-      starting_point,
+      random_vector,
       distance: "euclidean"
     ).
     limit(10_000)
 end
 
 query(:cosine_nearest_neighbors) do
-  starting_point = options.vector_dimension.times.map { Random.rand(-1.0..1.0) }
-
   from(:items).
     nearest_neighbors(
       :embedding,
-      starting_point,
+      random_vector,
       distance: "cosine"
     ).
     limit(10_000)
 end
 
 query(:inner_product_nearest_neighbors) do
-  starting_point = options.vector_dimension.times.map { Random.rand(-1.0..1.0) }
-
   from(:items).
     nearest_neighbors(
       :embedding,
-      starting_point,
+      random_vector,
       distance: "inner_product"
     ).
     limit(10_000)
