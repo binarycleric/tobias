@@ -20,11 +20,8 @@ setup do
     column :embedding, "vector(#{dimensions})"
   end
 
-  `hf download KShivendu/dbpedia-entities-openai-1M --repo-type=dataset --local-dir /tmp/dbpedia-entities-openai-1M`
-
+  download_from_hugging_face("KShivendu/dbpedia-entities-openai-1M", "/tmp/dbpedia-entities-openai-1M")
   run_parallel(Dir.glob("/tmp/dbpedia-entities-openai-1M/data/*.parquet")) do |file|
-    puts "Processing #{file} from #{Process.pid}."
-
     Parquet.each_row(file) do |row|
       from(:items).insert(
         title: row["title"],
