@@ -15,19 +15,19 @@ setup do
   dimensions = options.vector_dimension
   create_table? :items do
     primary_key :id
+    column :title, :text
+    column :text, :text
     column :embedding, "vector(#{dimensions})"
   end
-end
 
-load_data do
-  loop do
-    break if from(:items).count >= options.total_vectors
-
-    from(:items).multi_insert(1_000.times.map do
-      {
-        embedding: ::Pgvector.encode(random_vector)
-      }
-    end)
+  run_parallel(Dir.glob("/Users/jon/src/dbpedia-entities-openai-1M/data/*.parquet")) do |file|
+    Parquet.each_row(file) do |row|
+      from(:items).insert(
+          title: row["title"],
+          text: row["text"],
+          embedding: ::Pgvector.encode(row["openai"])
+        )
+    end
   end
 end
 
