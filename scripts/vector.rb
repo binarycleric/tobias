@@ -20,13 +20,17 @@ setup do
     column :embedding, "vector(#{dimensions})"
   end
 
+  class Item < Sequel::Model(:items)
+    plugin :pgvector, :embedding
+  end
+
   run_parallel(Dir.glob("/Users/jon/src/dbpedia-entities-openai-1M/data/*.parquet")) do |file|
     Parquet.each_row(file) do |row|
-      from(:items).insert(
-          title: row["title"],
-          text: row["text"],
-          embedding: ::Pgvector.encode(row["openai"])
-        )
+      Item.create(
+        title: row["title"],
+        text: row["text"],
+        embedding: row["openai"]
+      )
     end
   end
 end
