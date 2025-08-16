@@ -1,5 +1,8 @@
 # Tobias
 
+[![Test](https://github.com/binarycleric/tobias/actions/workflows/test.yml/badge.svg)](https://github.com/binarycleric/tobias/actions/workflows/test.yml)
+[![Gem Version](https://badge.fury.io/rb/tobias.svg)](https://badge.fury.io/rb/tobias)
+
 Tobias is your friendly PostgreSQL DBA who is obsessed with optimizing your database.
 
 Named after a nerdy but friendly DBA who is obsessed with query performance, Tobias helps you find the optimal `work_mem` setting for your PostgreSQL queries. It runs your queries with various memory settings to determine the minimum `work_mem` needed to keep your queries entirely in memory without creating temporary files.
