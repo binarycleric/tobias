@@ -17,10 +17,15 @@ module Tobias
 
     module DefaultHelpers
       def run_parallel(list, &block)
-        promises = list.map do |item|
-          Concurrent::Promise.execute { yield(item) }
+        list.each do |l|
+          fork do
+            disconnect
+            yield l
+          end
         end
-        Concurrent::Promise.zip(*promises).wait
+
+        disconnect
+        Process.waitall
       end
     end
 
