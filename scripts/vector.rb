@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-option(:total_vectors, 5_000_000)
-option(:vector_dimension, 1_536)
-
 helpers do
-  def random_vector(size: options.vector_dimension)
+  def random_vector(size: 1_536)
     Array.new(size) { rand(-1.0..1.0) }
   end
 
@@ -16,12 +13,11 @@ end
 setup do
   db.run("CREATE EXTENSION IF NOT EXISTS vector")
 
-  dimensions = options.vector_dimension
   db.create_table? :items do
     primary_key :id
     column :title, :text
     column :text, :text
-    column :embedding, "vector(#{dimensions})"
+    column :embedding, "vector(#{1_536})"
     column :created_at, :timestamp, default: Sequel::CURRENT_TIMESTAMP
   end
 
