@@ -12,7 +12,7 @@ module Tobias
       end
 
       def description
-        "Optional work_mem settings"
+        "Optimal work_mem settings"
       end
 
       def run_each(name, query)
