@@ -21,7 +21,7 @@ module Tobias
         @database
       end
 
-      def run_parallel(list, &block)
+      def run_parallel(list = Etc.nprocessors.times, &block)
         db.disconnect
 
         Parallel.each(list, in_processes: Etc.nprocessors) do |item|
@@ -36,13 +36,7 @@ module Tobias
     end
 
     def run_query(query)
-      sql = if query.is_a?(String)
-               query
-             else
-               run_action(query).sql
-             end
-
-      @database.run(sql)
+      @database.run(run_action(query).sql)
     end
 
     def run_teardown
@@ -89,7 +83,11 @@ module Tobias
     end
 
     def query(name, sql = nil, &block)
-      @queries[name] = sql || block
+      if sql.is_a?(String)
+        @queries[name] = Proc.new { sql }
+      else
+        @queries[name] = block || Proc.new { raise "No SQL provided for query '#{name}'" }
+      end
     end
   end
 end
