@@ -64,7 +64,7 @@ module Tobias
       puts parsed
 
       thinking_time = Benchmark.realtime do
-        results = Evaluations.run(container, options)
+        results = Evaluations.run(database, container, options)
       end
 
       parsed = TTY::Markdown.parse(<<~MARKDOWN)

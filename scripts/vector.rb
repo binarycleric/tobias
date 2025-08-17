@@ -22,6 +22,7 @@ setup do
     column :title, :text
     column :text, :text
     column :embedding, "vector(#{dimensions})"
+    column :created_at, :timestamp, default: Sequel::CURRENT_TIMESTAMP
   end
 
   download_from_hugging_face("KShivendu/dbpedia-entities-openai-1M", "/tmp/dbpedia-entities-openai-1M")
@@ -35,6 +36,7 @@ setup do
     end
   end
 
+  db.run("SET maintenance_work_mem = '128MB';")
   db.run("CREATE INDEX IF NOT EXISTS items_embedding_idx ON items USING ivfflat (embedding) WITH (lists = 100)")
 end
 
@@ -43,7 +45,7 @@ teardown do
   db.run("DROP EXTENSION IF EXISTS vector")
 end
 
-query(:euclidean_nearest_neighbors) do |db|
+query(:euclidean_nearest_neighbors) do
   db.
     from(:items).
     nearest_neighbors(

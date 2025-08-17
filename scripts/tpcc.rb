@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 query(:stock_by_warehouse_and_district) do
-  warehouse_id = from(:warehouse).
+  warehouse_id = db.from(:warehouse).
     order(Sequel.lit("RANDOM()")).
     limit(1).
     first[:w_id]
@@ -12,7 +12,7 @@ query(:stock_by_warehouse_and_district) do
     limit(1).
     first[:d_id]
 
-  from(:stock).
+  db.from(:stock).
     join(:order_line, ol_w_id: :s_w_id, ol_i_id: :s_i_id).
     where(ol_w_id: warehouse_id, ol_d_id: district_id).
     where(Sequel.lit("s_quantity < ?", rand(100..500))).
@@ -23,7 +23,8 @@ query(:stock_by_warehouse_and_district) do
 end
 
 query(:most_active_districts) do
-  from(:district).
+  db.
+    from(:district).
     join(:order_line, [[:ol_d_id, :d_id], [:ol_w_id, :d_w_id]]).
     group(:d_w_id, :d_id, :d_name).
     select(

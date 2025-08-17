@@ -2,9 +2,9 @@
 
 module Tobias
   module Evaluations
-    def self.run(container, options)
+    def self.run(database, container, options)
       results = []
-      results << WorkMem.new(container, options).run
+      results << WorkMem.new(database, container, options).run
       results
     end
   end
