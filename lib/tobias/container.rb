@@ -2,8 +2,9 @@
 
 module Tobias
   class Container
-    def initialize(code)
+    def initialize(code, database)
       @code = code
+      @database = database
       @queries = Concurrent::Hash.new
       @sql = Concurrent::Hash.new
       @options = Concurrent::Hash.new
@@ -16,10 +17,14 @@ module Tobias
     end
 
     module DefaultHelpers
+      def db
+        @database
+      end
+
       def run_parallel(list, &block)
         thread_pool = Concurrent::ThreadPoolExecutor.new(
           min_threads: 2,
-          max_threads: Etc.nprocessors + 2,
+          max_threads: Etc.nprocessors,
           max_queue: 100
         )
 
@@ -28,51 +33,47 @@ module Tobias
             block.call(item)
           end
         end
-        Concurrent::Promise.zip(*promises).wait!
-      end
 
-      def download_from_hugging_face(repo, local_dir="/tmp/#{repo}")
-        `hf download #{repo} --repo-type=dataset --local-dir #{local_dir}`
+        promise = Concurrent::Promise.zip(*promises)
+
+        loop do
+          break if promise.fulfilled? || promise.rejected?
+          sleep 0.1
+        end
       end
     end
 
-    def run_setup(context)
-      run_action(@setup, context)
+    def run_setup
+      run_action(@setup)
     end
 
-    def run_query(query, context)
+    def run_query(query)
       sql = if query.is_a?(String)
                query
              else
-               run_action(query, context).sql
+               run_action(query).sql
              end
 
-      context.run(sql)
+      @database.run(sql)
     end
 
-    def run_teardown(context)
-      run_action(@teardown, context)
+    def run_teardown
+      run_action(@teardown)
     end
 
-    def run_action(action, context)
-      options = Struct.new(*@options.keys).new(*@options.values)
+    def options
+      Struct.new(*@options.keys).new(*@options.values)
+    end
+
+    def run_action(action)
       helpers = @helpers
 
-      context.class_eval do
+      class_eval do
         include DefaultHelpers
         include helpers
-
-        def options=(new_options)
-          @options = new_options
-        end
-
-        def options
-          @options
-        end
       end
 
-      context.options = options
-      context.instance_eval(&action)
+      instance_eval(&action)
     end
 
     def queries

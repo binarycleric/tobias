@@ -21,10 +21,9 @@ module Tobias
     end
 
     class Base
-      attr_reader :database, :container, :options
+      attr_reader :container, :options
 
-      def initialize(database, container, options)
-        @database = database
+      def initialize(container, options)
         @container = container
         @options = options
       end
@@ -32,7 +31,7 @@ module Tobias
       def run(&block)
         results = Concurrent::Array.new
 
-        container.run_setup(database)
+        container.run_setup
         container.queries.each do |name, query|
           result = run_each(name, query)
           results << result if result
@@ -40,7 +39,7 @@ module Tobias
 
         to_markdown(results)
       ensure
-        container.run_teardown(database)
+        container.run_teardown
       end
 
       def run_each(query)
