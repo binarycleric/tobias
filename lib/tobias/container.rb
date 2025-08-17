@@ -22,28 +22,16 @@ module Tobias
       end
 
       def run_parallel(list, &block)
-        thread_pool = Concurrent::ThreadPoolExecutor.new(
-          min_threads: 2,
-          max_threads: Etc.nprocessors,
-          max_queue: 100
-        )
+        db.disconnect
 
-        promises = list.map do |item|
-          Concurrent::Promise.execute(executor: thread_pool) do
-            block.call(item)
-          end
-        end
-
-        promise = Concurrent::Promise.zip(*promises)
-
-        loop do
-          break if promise.fulfilled? || promise.rejected?
-          sleep 0.1
+        Parallel.each(list, in_processes: Etc.nprocessors) do |item|
+          instance_exec(item, &block)
         end
       end
     end
 
     def run_setup
+      @database.run("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
       run_action(@setup)
     end
 

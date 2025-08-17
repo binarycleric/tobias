@@ -11,6 +11,9 @@ if RUBY_ENGINE == "ruby"
   end
 end
 
+# See: https://github.com/ged/ruby-pg/issues/538#issuecomment-1591629049
+ENV["PGGSSENCMODE"] = "disable"
+
 require "bundler/setup"
 Bundler.require(:default)
 
@@ -21,6 +24,7 @@ require "pgvector"
 require "enumerable-stats"
 require "benchmark"
 require "parquet"
+require "parallel"
 require "tty-markdown"
 require "tty-table"
 

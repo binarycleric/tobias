@@ -21,9 +21,10 @@ module Tobias
     end
 
     class Base
-      attr_reader :container, :options
+      attr_reader :database, :container, :options
 
-      def initialize(container, options)
+      def initialize(database, container, options)
+        @database = database
         @container = container
         @options = options
       end
