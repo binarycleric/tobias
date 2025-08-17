@@ -55,7 +55,7 @@ module Tobias
         raise "Script not found at: #{script}"
       end
 
-      container = Container.new(code)
+      container = Container.new(code, database)
       results = {}
 
       parsed = TTY::Markdown.parse(<<~MARKDOWN)
@@ -64,7 +64,7 @@ module Tobias
       puts parsed
 
       thinking_time = Benchmark.realtime do
-        results = Evaluations.run(database, container, options)
+        results = Evaluations.run(container, options)
       end
 
       parsed = TTY::Markdown.parse(<<~MARKDOWN)
