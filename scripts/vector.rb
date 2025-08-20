@@ -1,12 +1,20 @@
 # frozen_string_literal: true
 
+require "open3"
+
 helpers do
   def random_vector(size: 1_536)
     Array.new(size) { rand(-1.0..1.0) }
   end
 
   def download_from_hugging_face(repo, local_dir="/tmp/#{repo}")
-    `hf download #{repo} --repo-type=dataset --local-dir #{local_dir}`
+    stdout, status = Open3.capture2(
+      "hf", "download", repo, "--repo-type=dataset", "--local-dir", local_dir
+    )
+
+    unless status.success?
+      raise "Failed to download #{repo}: #{stdout}"
+    end
   end
 end
 
