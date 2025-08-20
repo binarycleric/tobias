@@ -1,13 +1,23 @@
 # frozen_string_literal: true
 
 require "open3"
+require "tmpdir"
 
 helpers do
   def random_vector(size: 1_536)
     Array.new(size) { rand(-1.0..1.0) }
   end
 
-  def download_from_hugging_face(repo, local_dir="/tmp/#{repo}")
+  def download_from_hugging_face(repo)
+    local_dir = Dir.mktmpdir("hf-#{repo}-")
+    stdout, status = Open3.capture2(
+      "which", "hf"
+    )
+
+    unless status.success?
+      raise "Failed to find huggingface CLI: #{stdout}"
+    end
+
     stdout, status = Open3.capture2(
       "hf", "download", repo, "--repo-type=dataset", "--local-dir", local_dir
     )
@@ -15,6 +25,8 @@ helpers do
     unless status.success?
       raise "Failed to download #{repo}: #{stdout}"
     end
+
+    local_dir
   end
 end
 
@@ -29,8 +41,8 @@ setup do
     column :created_at, :timestamp, default: Sequel::CURRENT_TIMESTAMP
   end
 
-  download_from_hugging_face("KShivendu/dbpedia-entities-openai-1M", "/tmp/dbpedia-entities-openai-1M")
-  run_parallel(Dir.glob("/tmp/dbpedia-entities-openai-1M/data/*.parquet")) do |file|
+  local_dir = download_from_hugging_face("KShivendu/dbpedia-entities-openai-1M")
+  run_parallel(Dir.glob("#{local_dir}/data/*.parquet")) do |file|
     Parquet.each_row(file, columns: ["title", "text", "openai"]) do |row|
       db.from(:items).insert(
         title: row["title"],
