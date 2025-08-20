@@ -3,16 +3,18 @@
 require "spec_helper"
 
 RSpec.describe Tobias::Container do
+  let(:database) { instance_double("Database") }
+
   describe "#initialize" do
     it "stores the provided code" do
       code = "query(:test) { puts 'hello' }"
-      container = described_class.new(code)
+      container = described_class.new(code, database)
 
       expect(container.instance_variable_get(:@code)).to eq(code)
     end
 
     it "initializes empty queries hash" do
-      container = described_class.new("")
+      container = described_class.new("", database)
 
       expect(container.queries).to eq({})
     end
@@ -24,25 +26,25 @@ RSpec.describe Tobias::Container do
         end
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
 
       expect(container.queries).to have_key(:simple_query)
       expect(container.queries[:simple_query]).to be_a(Proc)
     end
 
     it "handles empty code without error" do
-      expect { described_class.new("") }.not_to raise_error
+      expect { described_class.new("", database) }.not_to raise_error
     end
 
     it "raises error for invalid Ruby syntax" do
       invalid_code = "query(:broken { syntax error"
 
-      expect { described_class.new(invalid_code) }.to raise_error(SyntaxError)
+      expect { described_class.new(invalid_code, database) }.to raise_error(SyntaxError)
     end
   end
 
   describe "#query" do
-    let(:container) { described_class.new("") }
+    let(:container) { described_class.new("", database) }
 
     it "stores a query with the given name and block" do
       test_block = proc { "test query" }
@@ -77,7 +79,7 @@ RSpec.describe Tobias::Container do
 
   describe "#queries" do
     it "returns an empty hash when no queries are defined" do
-      container = described_class.new("")
+      container = described_class.new("", database)
 
       expect(container.queries).to eq({})
     end
@@ -88,7 +90,7 @@ RSpec.describe Tobias::Container do
         query(:orders) { from(:orders) }
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
 
       expect(container.queries.keys).to contain_exactly(:users, :orders)
     end
@@ -98,7 +100,7 @@ RSpec.describe Tobias::Container do
         query(:test) { "executable" }
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
 
       expect(container.queries[:test].call).to eq("executable")
     end
@@ -122,7 +124,7 @@ RSpec.describe Tobias::Container do
         end
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
       query_block = container.queries[:complex_query]
 
       expect(query_block).to be_a(Proc)
@@ -141,7 +143,7 @@ RSpec.describe Tobias::Container do
         end
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
       query_block = container.queries[:with_variables]
 
       expect(query_block).to be_a(Proc)
@@ -156,7 +158,7 @@ RSpec.describe Tobias::Container do
         end
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
       query_block = container.queries[:error_query]
 
       expect { query_block.call }.to raise_error(StandardError, "Query execution failed")
@@ -173,7 +175,7 @@ RSpec.describe Tobias::Container do
         end
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
 
       expect(container.queries[:with_helper].call).to eq("helper query")
     end
@@ -189,7 +191,7 @@ RSpec.describe Tobias::Container do
         end
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
 
       expect(container.queries[:isolated].call).to eq("isolated")
     end
@@ -222,7 +224,7 @@ RSpec.describe Tobias::Container do
         end
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
 
       expect(container.queries.keys).to contain_exactly(
         :stock_by_warehouse_and_district,
@@ -241,7 +243,7 @@ RSpec.describe Tobias::Container do
         query(:third) { "3" }
       RUBY
 
-      container = described_class.new(code)
+      container = described_class.new(code, database)
 
       # Ruby hash preserves insertion order in Ruby 2.7+
       expect(container.queries.keys).to eq([:first, :second, :third])
