@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
+require "open3"
+
 module Tobias
   class Container
-    def initialize(code)
+    def initialize(code, database)
       @code = code
+      @database = database
       @queries = Concurrent::Hash.new
       @sql = Concurrent::Hash.new
       @options = Concurrent::Hash.new
@@ -15,54 +18,46 @@ module Tobias
       eval(code, binding, __FILE__, __LINE__)
     end
 
-    def run_setup(context)
-      run_action(@setup, context)
-    end
-
-    def run_load_data(context)
-      Etc.nprocessors.times do
-        fork do
-          context.disconnect
-          run_action(@load_data, context)
-        end
+    module DefaultHelpers
+      def db
+        @database
       end
 
-      context.disconnect
-      Process.waitall
+      def run_parallel(list = Etc.nprocessors.times, &block)
+        db.disconnect
+
+        Parallel.each(list, in_processes: Etc.nprocessors) do |item|
+          instance_exec(item, &block)
+        end
+      end
     end
 
-    def run_query(query, context)
-      sql = if query.is_a?(String)
-               query
-             else
-               run_action(query, context).sql
-             end
-
-      context.run(sql)
+    def run_setup
+      @database.run("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
+      run_action(@setup)
     end
 
-    def run_teardown(context)
-      run_action(@teardown, context)
+    def run_query(query)
+      @database.run(run_action(query).sql)
     end
 
-    def run_action(action, context)
-      options = Struct.new(*@options.keys).new(*@options.values)
+    def run_teardown
+      run_action(@teardown)
+    end
+
+    def options
+      Struct.new(*@options.keys).new(*@options.values)
+    end
+
+    def run_action(action)
       helpers = @helpers
 
-      context.class_eval do
+      class_eval do
+        include DefaultHelpers
         include helpers
-
-        def options=(new_options)
-          @options = new_options
-        end
-
-        def options
-          @options
-        end
       end
 
-      context.options = options
-      context.instance_eval(&action)
+      instance_eval(&action)
     end
 
     def queries
@@ -90,7 +85,11 @@ module Tobias
     end
 
     def query(name, sql = nil, &block)
-      @queries[name] = sql || block
+      if sql.is_a?(String)
+        @queries[name] = Proc.new { sql }
+      else
+        @queries[name] = block || Proc.new { raise "No SQL provided for query '#{name}'" }
+      end
     end
   end
 end
