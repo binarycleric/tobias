@@ -22,6 +22,8 @@ setup do
       end)
     end
   end
+
+  db.add_index :workmem_stress, :name
 end
 
 teardown do
@@ -66,4 +68,20 @@ query(:self_join) do
     ).
     group(Sequel[:a][:id], Sequel[:b][:id]).
     limit(10_000)
+end
+
+query(:window_function) do
+  db.from(:workmem_stress)
+    .select(:id, :name, :value, :payload)
+    .select{ Sequel.function(:row_number).over(order: Sequel.asc(:value)).as(:rn) }
+    .order(Sequel.asc(:value))
+    .limit(100_000)
+end
+
+query(:index_scan) do
+  db.
+    from(:workmem_stress).select(:id, :name, :value).
+    where{ Sequel[:name] =~ 'name_%' }.
+    order(Sequel.asc(:value)).
+    limit(50_000)
 end
