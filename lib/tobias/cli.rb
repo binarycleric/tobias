@@ -55,7 +55,7 @@ module Tobias
         raise "Script not found at: #{script}"
       end
 
-      container = Container.new(code)
+      container = Container.new(code, database)
       results = {}
 
       parsed = TTY::Markdown.parse(<<~MARKDOWN)

@@ -12,7 +12,7 @@ module Tobias
       end
 
       def description
-        "Optional work_mem settings"
+        "Optimal work_mem settings"
       end
 
       def run_each(name, query)
@@ -22,7 +22,7 @@ module Tobias
           database.transaction do
             database.run("SET LOCAL work_mem = '#{value.to_sql}'")
             database.select(Sequel.function(:pg_stat_reset)).first
-            container.run_query(query, database)
+            container.run_query(query)
 
             stats = database[:pg_stat_database].
               where(datname: Sequel.function(:current_database)).

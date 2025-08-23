@@ -1,43 +1,70 @@
 # frozen_string_literal: true
 
-option(:total_vectors, 5_000_000)
-option(:vector_dimension, 1_536)
+require "fileutils"
+require "open3"
+require "tmpdir"
 
 helpers do
-  def random_vector(size: options.vector_dimension)
+  def random_vector(size: 1_536)
     Array.new(size) { rand(-1.0..1.0) }
+  end
+
+  def download_from_hugging_face(repo)
+    stdout, status = Open3.capture2(
+      "which", "hf"
+    )
+
+    unless status.success?
+      raise "Failed to find huggingface CLI: #{stdout}"
+    end
+
+    stdout, status = Open3.capture2(
+      "hf", "download", repo, "--repo-type=dataset"
+    )
+
+    unless status.success?
+      raise "Failed to download #{repo}: #{stdout}"
+    end
+
+    # Return the local directory where the dataset is cached.
+    "#{ENV["HOME"]}/.cache/huggingface/hub/datasets--#{repo.gsub("/", "--")}"
   end
 end
 
 setup do
-  run("CREATE EXTENSION IF NOT EXISTS vector")
+  db.run("CREATE EXTENSION IF NOT EXISTS vector")
 
-  dimensions = options.vector_dimension
-  create_table? :items do
+  db.create_table? :items do
     primary_key :id
-    column :embedding, "vector(#{dimensions})"
+    column :title, :text
+    column :text, :text
+    column :embedding, "vector(#{1_536})"
+    column :created_at, :timestamp, default: Sequel::CURRENT_TIMESTAMP
   end
-end
 
-load_data do
-  loop do
-    break if from(:items).count >= options.total_vectors
-
-    from(:items).multi_insert(1_000.times.map do
-      {
-        embedding: ::Pgvector.encode(random_vector)
-      }
-    end)
+  local_dir = download_from_hugging_face("KShivendu/dbpedia-entities-openai-1M")
+  run_parallel(Dir.glob("#{local_dir}/snapshots/**/data/*.parquet")) do |file|
+    Parquet.each_row(file, columns: ["title", "text", "openai"]) do |row|
+      db.from(:items).insert(
+        title: row["title"],
+        text: row["text"],
+        embedding: Pgvector.encode(row["openai"])
+      )
+    end
   end
+
+  db.run("SET maintenance_work_mem = '128MB';")
+  db.run("CREATE INDEX IF NOT EXISTS items_embedding_idx ON items USING ivfflat (embedding) WITH (lists = 100)")
 end
 
 teardown do
-  drop_table(:items)
-  run("DROP EXTENSION IF EXISTS vector")
+  db.drop_table(:items)
+  db.run("DROP EXTENSION IF EXISTS vector")
 end
 
 query(:euclidean_nearest_neighbors) do
-  from(:items).
+  db.
+    from(:items).
     nearest_neighbors(
       :embedding,
       random_vector,
@@ -47,7 +74,8 @@ query(:euclidean_nearest_neighbors) do
 end
 
 query(:cosine_nearest_neighbors) do
-  from(:items).
+  db.
+    from(:items).
     nearest_neighbors(
       :embedding,
       random_vector,
@@ -57,7 +85,8 @@ query(:cosine_nearest_neighbors) do
 end
 
 query(:inner_product_nearest_neighbors) do
-  from(:items).
+  db.
+    from(:items).
     nearest_neighbors(
       :embedding,
       random_vector,
