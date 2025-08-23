@@ -92,6 +92,20 @@ $ tobias profile scripts/tpcc.rb --database-url postgres://localhost/tpcc_test
 
 See `scripts/tpcc.rb` for a complete example that tests TPC-C benchmark queries.
 
+## Running Tests Locally
+
+Install act.
+
+```shell
+$ brew install act
+```
+
+Run the build.
+
+```shell
+$ act --container-architecture linux/amd64
+```
+
 ## Requirements
 
 - Ruby 3.3+
