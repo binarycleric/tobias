@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "open3"
 require "tmpdir"
 
@@ -9,7 +10,6 @@ helpers do
   end
 
   def download_from_hugging_face(repo)
-    local_dir = Dir.mktmpdir("hf-#{repo}-")
     stdout, status = Open3.capture2(
       "which", "hf"
     )
@@ -19,14 +19,15 @@ helpers do
     end
 
     stdout, status = Open3.capture2(
-      "hf", "download", repo, "--repo-type=dataset", "--local-dir", local_dir
+      "hf", "download", repo, "--repo-type=dataset"
     )
 
     unless status.success?
       raise "Failed to download #{repo}: #{stdout}"
     end
 
-    local_dir
+    # Return the local directory where the dataset is cached.
+    "#{ENV["HOME"]}/.cache/huggingface/hub/datasets--#{repo.gsub("/", "--")}"
   end
 end
 
@@ -42,12 +43,12 @@ setup do
   end
 
   local_dir = download_from_hugging_face("KShivendu/dbpedia-entities-openai-1M")
-  run_parallel(Dir.glob("#{local_dir}/data/*.parquet")) do |file|
+  run_parallel(Dir.glob("#{local_dir}/snapshots/**/data/*.parquet")) do |file|
     Parquet.each_row(file, columns: ["title", "text", "openai"]) do |row|
       db.from(:items).insert(
         title: row["title"],
         text: row["text"],
-        embedding: "[#{row["openai"].join(",")}]"
+        embedding: Pgvector.encode(row["openai"])
       )
     end
   end
