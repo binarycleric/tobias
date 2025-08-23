@@ -15,6 +15,8 @@ You'll need the huggingface CLI. On macOS you can install it via Homebrew:
 $ brew install huggingface-cli
 ```
 
+Please note that Hugging Face is only being used for fetching example datasets. No part of this project uses AI models.
+
 ## Installation
 
 ```shell
