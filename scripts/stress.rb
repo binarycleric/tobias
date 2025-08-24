@@ -71,7 +71,8 @@ query(:self_join) do
 end
 
 query(:window_function) do
-  db.from(:items)
+  db
+    .from(:items)
     .select(:id, :name, :value, :payload)
     .select{ Sequel.function(:row_number).over(order: Sequel.asc(:value)).as(:rn) }
     .order(Sequel.asc(:value))
