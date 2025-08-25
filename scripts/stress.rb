@@ -16,8 +16,9 @@ setup do
       db.from(:items).multi_insert(1000.times.map do
         {
           name: "name_#{Random.rand(1..1_000_000)}",
-          value: Random.rand(1..1_000_000),
-          payload: SecureRandom.hex(128)
+          value: Random.rand(1..10_000_000),
+          payload: SecureRandom.hex(128),
+          created_at: Time.now - Random.rand(0..864_000)
         }
       end)
     end
@@ -30,7 +31,7 @@ teardown do
   db.drop_table(:items)
 end
 
-query(:large_sort) do
+query(:large_sort_string) do
   db.
     from(:items).
     select(:id, :name, :value, :payload).
@@ -38,11 +39,35 @@ query(:large_sort) do
     limit(10_000)
 end
 
-query(:large_sort_created_at) do
+query(:large_sort_integer) do
+  db.
+    from(:items).
+    select(:id, :name, :value, :payload).
+    order(Sequel.desc(:value)).
+    limit(10_000)
+end
+
+query(:large_sort_timestamp) do
   db.
     from(:items).
     select(:id, :name, :value, :payload).
     order(Sequel.desc(:created_at)).
+    limit(10_000)
+end
+
+query(:large_filter_integer) do
+  db.
+    from(:items).
+    select(:id, :name, :value, :payload).
+    where { Sequel[:value] < 1000 }.
+    limit(10_000)
+end
+
+query(:large_filter_timestamp) do
+  db.
+    from(:items).
+    select(:id, :name, :value, :payload).
+    where { Sequel[:created_at] < Time.now - 3600 }.
     limit(10_000)
 end
 
@@ -76,7 +101,7 @@ query(:window_function) do
     .select(:id, :name, :value, :payload)
     .select{ Sequel.function(:row_number).over(order: Sequel.asc(:value)).as(:rn) }
     .order(Sequel.asc(:value))
-    .limit(100_000)
+    .limit(10_000)
 end
 
 query(:index_scan) do
@@ -84,5 +109,5 @@ query(:index_scan) do
     from(:items).select(:id, :name, :value).
     where{ Sequel[:name] =~ 'name_%' }.
     order(Sequel.asc(:value)).
-    limit(50_000)
+    limit(10_000)
 end
